@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณภาษีและเบี้ยปรับนำเข้าศุลกากร</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Sarabun & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+        .tab-active { @apply border-brand-600 text-brand-600 bg-brand-50/50; }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col justify-between text-slate-800 antialiased">
+
+    <div class="max-w-4xl mx-auto w-full px-4 py-8 sm:px-6 lg:px-8 flex-grow">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="inline-flex items-center justify-center p-3 bg-brand-100 text-brand-700 rounded-2xl mb-3 shadow-sm">
+                <i data-lucide="calculator" class="w-8 h-8"></i>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                โปรแกรมคำนวณภาษี & เบี้ยปรับนำเข้าศุลกากร
+            </h1>
+            <p class="text-sm sm:text-base text-slate-600 mt-1 max-w-xl mx-auto">
+                คำนวณประเมินภาษีอากร ค่าปรับศุลกากร และเบี้ยปรับเงินเพิ่มสรรพากรตาม พ.ร.บ. ศุลกากร พ.ศ. 2560
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Left Panel: Input Controls -->
+            <div class="lg:col-span-7 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <form id="calcForm" onsubmit="return false;" class="space-y-6">
+                    
+                    <!-- Step 1: Product & CIF Value -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold">1</span>
+                            <h2 class="text-base font-semibold text-slate-900">มูลค่าสินค้านำเข้า (ราคา CIF)</h2>
+                        </div>
+                        
+                        <div>
+                            <label for="cifPrice" class="block text-sm font-medium text-slate-700 mb-1">
+                                ราคาสินค้า + ค่าขนส่ง + ค่าประกันภัย (บาท)
+                            </label>
+                            <div class="relative rounded-lg shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="coins" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="cifPrice" value="500000" min="0" step="any"
+                                    class="block w-full pl-10 pr-12 py-2.5 text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-lg"
+                                    placeholder="0.00" required oninput="calculatePenalty()">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                                    THB
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Import Duty Rate -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold">2</span>
+                                <h2 class="text-base font-semibold text-slate-900">อัตราอากรขาเข้าปกติ</h2>
+                            </div>
+                            <span class="text-xs text-slate-500">เลือกประเภทสินค้าลัดได้</span>
+                        </div>
+
+                        <div>
+                            <!-- Preset Chips -->
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <button type="button" onclick="setDuty(0)" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">ไอที/คอมฯ (0%)</button>
+                                <button type="button" onclick="setDuty(5)" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">เครื่องจักร (5%)</button>
+                                <button type="button" onclick="setDuty(10)" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">ทั่วไป (10%)</button>
+                                <button type="button" onclick="setDuty(30)" class="text-xs px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 transition">เสื้อผ้า/เครื่องสำอาง (30%)</button>
+                            </div>
+
+                            <div class="relative rounded-lg shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i data-lucide="percent" class="w-5 h-5"></i>
+                                </div>
+                                <input type="number" id="dutyRate" value="10" min="0" max="100" step="any"
+                                    class="block w-full pl-10 pr-12 py-2.5 text-slate-900 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium"
+                                    placeholder="10" required oninput="calculatePenalty()">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400 text-sm">
+                                    %
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Violation Type -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold">3</span>
+                            <h2 class="text-base font-semibold text-slate-900">ลักษณะการกระทำความผิด</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="relative flex flex-col p-4 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-500 transition focus-within:ring-2 focus-within:ring-brand-500" id="label-smuggle">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-semibold text-slate-900">1. ลักลอบนำเข้า</span>
+                                    <input type="radio" name="caseType" value="smuggle" checked class="text-brand-600 focus:ring-brand-500" onchange="updateCaseStyle(); calculatePenalty();">
+                                </div>
+                                <p class="text-xs text-slate-500">แอบนำเข้า ไม่ผ่านพิธีการศุลกากรเลย (หนีภาษี)</p>
+                            </label>
+
+                            <label class="relative flex flex-col p-4 border border-slate-200 rounded-xl cursor-pointer hover:border-brand-500 transition focus-within:ring-2 focus-within:ring-brand-500" id="label-underdeclare">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-semibold text-slate-900">2. สำแดงเท็จ</span>
+                                    <input type="radio" name="caseType" value="underdeclare" class="text-brand-600 focus:ring-brand-500" onchange="updateCaseStyle(); calculatePenalty();">
+                                </div>
+                                <p class="text-xs text-slate-500">ผ่านศุลกากร แต่แจ้งราคาต่ำกว่าจริง/พิกัดผิด</p>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Overdue Period -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold">4</span>
+                            <h2 class="text-base font-semibold text-slate-900">ระยะเวลาค้างชำระ (เพื่อคำนวณเงินเพิ่ม)</h2>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="monthsOverdue" class="block text-xs font-medium text-slate-700 mb-1">
+                                    จำนวนเดือนที่ค้างชำระ
+                                </label>
+                                <input type="number" id="monthsOverdue" value="1" min="0" max="120"
+                                    class="block w-full py-2 px-3 border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                                    oninput="calculatePenalty()">
+                                <span class="text-[10px] text-slate-500 mt-0.5 block">เงินเพิ่มศุลกากร 1%/เดือน, VAT 1.5%/เดือน</span>
+                            </div>
+
+                            <div id="customsMultipleWrapper">
+                                <label for="customsMultiple" class="block text-xs font-medium text-slate-700 mb-1">
+                                    อัตราค่าปรับศุลกากร
+                                </label>
+                                <select id="customsMultiple" class="block w-full py-2 px-3 border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500" onchange="calculatePenalty()">
+                                    <option value="4" id="opt-smuggle-4">4 เท่า (เพดานสูงสุดตามกฎหมาย ม.242)</option>
+                                    <option value="2" id="opt-smuggle-2">2 เท่า (อัตราผ่อนผัน/เปรียบเทียบปรับ)</option>
+                                    <option value="1" id="opt-smuggle-1">1 เท่า (อัตราผ่อนผันขั้นต่ำ)</option>
+                                    <option value="1" id="opt-under-1" hidden>1 เท่า ของอากรที่ขาด (เปรียบเทียบปรับ ม.243)</option>
+                                    <option value="2" id="opt-under-2" hidden>2 เท่า ของอากรที่ขาด</option>
+                                    <option value="4" id="opt-under-4" hidden>4 เท่า ของอากรที่ขาด (สูงสุด)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Right Panel: Results Summary -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl pointer-events-none"></div>
+
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">สรุปภาระการชำระรวม</span>
+                        <span id="caseBadge" class="text-xs px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-medium border border-red-500/30">
+                            ลักลอบนำเข้า
+                        </span>
+                    </div>
+
+                    <!-- Grand Total -->
+                    <div class="my-6">
+                        <div class="text-xs text-slate-400 mb-1">ยอดเงินที่ต้องชำระทั้งสิ้น (ประมาณการ)</div>
+                        <div class="text-3xl sm:text-4xl font-extrabold text-red-400 tracking-tight" id="totalPay">
+                            0 บาท
+                        </div>
+                        <div class="text-xs text-slate-400 mt-1 flex items-center gap-1" id="confiscateNotice">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
+                            <span class="text-amber-300 font-medium">สินค้ารถ/ของกลางจะถูก "ริบเป็นของหลวง"</span>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Breakdown -->
+                    <div class="space-y-3 border-t border-slate-800 pt-4 text-sm">
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>อากรขาเข้าปกติ</span>
+                            <span class="font-medium text-white" id="importDutyText">0 บาท</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-300">
+                            <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
+                            <span class="font-medium text-white" id="vatText">0 บาท</span>
+                        </div>
+                        <div class="flex justify-between items-center text-amber-300 border-t border-slate-800/60 pt-2">
+                            <span>ค่าปรับศุลกากร</span>
+                            <span class="font-bold text-amber-400" id="customsFineText">0 บาท</span>
+                        </div>
+                        <div class="flex justify-between items-center text-amber-300">
+                            <span>เบี้ยปรับ VAT สรรพากร</span>
+                            <span class="font-bold text-amber-400" id="vatFineText">0 บาท</span>
+                        </div>
+                        <!-- Split Surcharges for Transparency -->
+                        <div class="border-t border-slate-800/60 pt-2 space-y-1.5 text-xs text-slate-400">
+                            <div class="flex justify-between items-center">
+                                <span>• เงินเพิ่มอากรศุลกากร (1%/เดือน)</span>
+                                <span class="text-slate-300" id="customsSurchargeText">0 บาท</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>• เงินเพิ่ม VAT สรรพากร (1.5%/เดือน)</span>
+                                <span class="text-slate-300" id="vatSurchargeText">0 บาท</span>
+                            </div>
+                            <div class="flex justify-between items-center font-medium text-slate-300 pt-1">
+                                <span>รวมเงินเพิ่มค้างชำระ</span>
+                                <span id="surchargeText">0 บาท</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
+                        <button onclick="copySummary()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            คัดลอกสรุป
+                        </button>
+                        <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                            พิมพ์เอกสาร
+                        </button>
+                    </div>
+                </div>
+                    <!-- Legal Notice Box -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900 space-y-2">
+                        <div class="flex items-center gap-1.5 font-bold text-amber-900">
+                            <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+                            <span>ข้อสังเกตทางกฎหมาย (ตามคำพิพากษาศาลฎีกา)</span>
+                        </div>
+                        <ul class="list-disc list-inside space-y-1 text-amber-800 leading-relaxed">
+                            <li>กรณีลักลอบนำเข้า ค่าปรับ 4 เท่า คิดจาก <strong>(ราคา CIF + อากรขาเข้า)</strong> เท่านั้น ไม่นำ VAT มาร่วมคูณ 4 (ฎีกาที่ 6427/2567)</li>
+                            <li>กรณีสำแดงเท็จ ค่าปรับศุลกากรคิดจาก <strong>อากรขาเข้าที่ขาดไป</strong> (ไม่ใช่ราคาสินค้าทั้งหมด)</li>
+                            <li>หากยินยอมเปรียบเทียบนปรับในชั้นศุลกากร คดีอาญาจะถือเป็นอันยุติลง</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMsg">คัดลอกข้อมูลเรียบร้อยแล้ว</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 mt-auto">
+        <p>ระบบคำนวณเพื่อการประมาณการเบื้องต้นตาม พ.ร.บ. ศุลกากร พ.ศ. 2560 และประมวลรัษฎากร</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        function setDuty(rate) {
+            document.getElementById('dutyRate').value = rate;
+            calculatePenalty();
+        }
+
+        function updateCaseStyle() {
+            const caseType = document.querySelector('input[name="caseType"]:checked').value;
+            const labelSmuggle = document.getElementById('label-smuggle');
+            const labelUnder = document.getElementById('label-underdeclare');
+            
+            const optSmuggle4 = document.getElementById('opt-smuggle-4');
+            const optSmuggle2 = document.getElementById('opt-smuggle-2');
+            const optSmuggle1 = document.getElementById('opt-smuggle-1');
+            const optUnder1 = document.getElementById('opt-under-1');
+            const optUnder2 = document.getElementById('opt-under-2');
+            const optUnder4 = document.getElementById('opt-under-4');
+
+            if (caseType === 'smuggle') {
+                labelSmuggle.classList.add('border-brand-500', 'bg-brand-50/30');
+                labelUnder.classList.remove('border-brand-500', 'bg-brand-50/30');
+
+                optSmuggle4.hidden = false;
+                optSmuggle2.hidden = false;
+                optSmuggle1.hidden = false;
+                optUnder1.hidden = true;
+                optUnder2.hidden = true;
+                optUnder4.hidden = true;
+                document.getElementById('customsMultiple').value = "4";
+            } else {
+                labelUnder.classList.add('border-brand-500', 'bg-brand-50/30');
+                labelSmuggle.classList.remove('border-brand-500', 'bg-brand-50/30');
+
+                optSmuggle4.hidden = true;
+                optSmuggle2.hidden = true;
+                optSmuggle1.hidden = true;
+                optUnder1.hidden = false;
+                optUnder2.hidden = false;
+                optUnder4.hidden = false;
+                document.getElementById('customsMultiple').value = "1";
+            }
+        }
+
+        function calculatePenalty() {
+            const cif = parseFloat(document.getElementById('cifPrice').value) || 0;
+            const dutyRate = parseFloat(document.getElementById('dutyRate').value) || 0;
+            const caseType = document.querySelector('input[name="caseType"]:checked').value;
+            const months = parseInt(document.getElementById('monthsOverdue').value) || 0;
+            const customsMultiple = parseFloat(document.getElementById('customsMultiple').value) || 1;
+
+            // 1. Base Tax Calculation
+            const importDuty = cif * (dutyRate / 100);
+            const vatBase = cif + importDuty;
+            const vat = vatBase * 0.07;
+            const baseTaxTotal = importDuty + vat;
+
+            let customsFine = 0;
+            let vatFine = 0;
+            let customsSurcharge = 0;
+            let vatSurcharge = 0;
+            let grandTotal = 0;
+
+            const caseBadge = document.getElementById('caseBadge');
+            const confiscateNotice = document.getElementById('confiscateNotice');
+
+            if (caseType === 'smuggle') {
+                // Smuggling (ม. 242): Fine = Multiple * (CIF + Import Duty)
+                const customsFineBase = cif + importDuty;
+                customsFine = customsFineBase * customsMultiple;
+                vatFine = vat * 1; // VAT penalty from Revenue Dept (1x)
+                
+                customsSurcharge = importDuty * (0.01 * months);
+                vatSurcharge = vat * (0.015 * months);
+
+                grandTotal = baseTaxTotal + customsFine + vatFine + customsSurcharge + vatSurcharge;
+
+                caseBadge.innerText = 'ลักลอบนำเข้า';
+                caseBadge.className = 'text-xs px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-medium border border-red-500/30';
+                confiscateNotice.style.display = 'flex';
+            } else {
+                // Under-declaration (ม. 243): Fine = Multiple * Duty Shortfall
+                customsFine = importDuty * customsMultiple;
+                vatFine = vat * 1; 
+
+                customsSurcharge = importDuty * (0.01 * months);
+                vatSurcharge = vat * (0.015 * months);
+
+                grandTotal = baseTaxTotal + customsFine + vatFine + customsSurcharge + vatSurcharge;
+
+                caseBadge.innerText = 'สำแดงเท็จ';
+                caseBadge.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 font-medium border border-amber-500/30';
+                confiscateNotice.style.display = 'none';
+            }
+
+            const totalSurcharge = customsSurcharge + vatSurcharge;
+
+            // Render Output
+            document.getElementById('importDutyText').innerText = formatCurrency(importDuty);
+            document.getElementById('vatText').innerText = formatCurrency(vat);
+            document.getElementById('customsFineText').innerText = formatCurrency(customsFine);
+            document.getElementById('vatFineText').innerText = formatCurrency(vatFine);
+            document.getElementById('customsSurchargeText').innerText = formatCurrency(customsSurcharge);
+            document.getElementById('vatSurchargeText').innerText = formatCurrency(vatSurcharge);
+            document.getElementById('surchargeText').innerText = formatCurrency(totalSurcharge);
+            document.getElementById('totalPay').innerText = formatCurrency(grandTotal);
+        }
+
+        function formatCurrency(amount) {
+            return amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
+        }
+
+        function copySummary() {
+            const cif = document.getElementById('cifPrice').value;
+            const caseType = document.querySelector('input[name="caseType"]:checked').value === 'smuggle' ? 'ลักลอบนำเข้า' : 'สำแดงเท็จ';
+            const total = document.getElementById('totalPay').innerText;
+            
+            const summaryText = `[สรุปประเมินภาษีและค่าปรับศุลกากร]
+ประเภท: ${caseType}
+ราคาสินค้า (CIF): ${parseFloat(cif).toLocaleString()} บาท
+อากรขาเข้า: ${document.getElementById('importDutyText').innerText}
+ภาษี VAT (7%): ${document.getElementById('vatText').innerText}
+ค่าปรับศุลกากร: ${document.getElementById('customsFineText').innerText}
+เบี้ยปรับ VAT: ${document.getElementById('vatFineText').innerText}
+เงินเพิ่มอากร (1%/เดือน): ${document.getElementById('customsSurchargeText').innerText}
+เงินเพิ่ม VAT (1.5%/เดือน): ${document.getElementById('vatSurchargeText').innerText}
+ยอดชำระรวมทั้งสิ้น: ${total}`;
+
+            // Clipboard fallback for frame restrictions
+            const textarea = document.createElement('textarea');
+            textarea.value = summaryText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('คัดลอกสรุปรายการเรียบร้อยแล้ว');
+            } catch (err) {
+                showToast('ไม่สามารถคัดลอกได้');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            updateCaseStyle();
+            calculatePenalty();
+        };
+    </script>
+</body>
+</html>
