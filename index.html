@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- html2canvas for Image Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -189,7 +191,7 @@
             <!-- Right Panel: Results Summary -->
             <div class="lg:col-span-5 space-y-6">
                 
-                <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
+                <div id="summaryCard" class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
                     <div class="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -252,9 +254,9 @@
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                             คัดลอกสรุป
                         </button>
-                        <button onclick="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition">
-                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                            พิมพ์เอกสาร
+                        <button onclick="downloadAsImage()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition shadow-sm">
+                            <i data-lucide="image" class="w-3.5 h-3.5"></i>
+                            บันทึกเป็นรูปภาพ
                         </button>
                     </div>
                 </div>
@@ -440,6 +442,31 @@
             }, 2500);
         }
 
+        function downloadAsImage() {
+            const card = document.getElementById('summaryCard');
+            if (!card) return;
+
+            showToast('กำลังสร้างรูปภาพ...');
+
+            html2canvas(card, {
+                scale: 2,
+                backgroundColor: '#0f172a',
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `สรุปภาษีนำเข้า_ศุลกากร_${new Date().toISOString().slice(0,10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('บันทึกรูปภาพเรียบร้อยแล้ว');
+            }).catch(err => {
+                console.error(err);
+                showToast('ไม่สามารถสร้างรูปภาพได้');
+            });
+        }
+
         // Initialize on load
         window.onload = function() {
             updateCaseStyle();
@@ -448,3 +475,9 @@
     </script>
 </body>
 </html>
+```
+
+### รายละเอียดการอัปเดต:
+1. **เพิ่มไลบรารี `html2canvas`:** รองรับการเรนเดอร์การ์ดสรุปผลการคำนวณออกมาเป็นไฟล์ภาพ `.png`
+2. **ปรับเปลี่ยนปุ่ม Action:** เปลี่ยนจากปุ่มพิมพ์เป็นปุ่ม **"บันทึกเป็นรูปภาพ"** ที่พร้อมดาวน์โหลดลงคอมพิวเตอร์หรือโทรศัพท์มือถือทันที
+3. **ปรับความคมชัดภาพ:** กำหนด `scale: 2` เพื่อให้ภาพสรุปมีความคมชัดสูง อ่านง่ายแม้แชร์ลงไลน์หรือส่งอีเมลครับ
