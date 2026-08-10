@@ -192,29 +192,46 @@
             <div class="lg:col-span-5 space-y-6">
                 
                 <div id="summaryCard" class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl pointer-events-none"></div>
-
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">สรุปภาระการชำระรวม</span>
-                        <span id="caseBadge" class="text-xs px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-medium border border-red-500/30">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase">รายงานผลประเมิน & ข้อมูลที่กรอก</span>
+                        <span id="caseBadge" class="text-xs px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-medium border border-red-500/30 shrink-0">
                             ลักลอบนำเข้า
                         </span>
                     </div>
 
-                    <!-- Grand Total -->
-                    <div class="my-6">
-                        <div class="text-xs text-slate-400 mb-1">ยอดเงินที่ต้องชำระทั้งสิ้น (ประมาณการ)</div>
-                        <div class="text-3xl sm:text-4xl font-extrabold text-red-400 tracking-tight" id="totalPay">
+                    <!-- Input Data Summary Section -->
+                    <div class="mb-5 p-3.5 bg-slate-800/80 rounded-xl border border-slate-700/60 text-xs space-y-2">
+                        <div class="text-[11px] font-semibold text-slate-400 border-b border-slate-700/60 pb-1.5 flex items-center justify-between">
+                            <span>📋 รายละเอียดข้อมูลที่กรอก (Input Parameters)</span>
+                            <span class="text-[10px] text-brand-400 font-medium">อัปเดตอัตโนมัติ</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-slate-300 pt-0.5 leading-relaxed">
+                            <div>• ราคา CIF: <strong class="text-white font-semibold" id="rptCif">0 บาท</strong></div>
+                            <div>• อัตราอากรปกติ: <strong class="text-white font-semibold" id="rptDutyRate">0%</strong></div>
+                            <div>• ประเภทคดี: <strong class="text-white font-semibold" id="rptCaseType">-</strong></div>
+                            <div>• ค้างชำระ: <strong class="text-white font-semibold" id="rptMonths">0 เดือน</strong></div>
+                            <div class="col-span-2 border-t border-slate-700/40 pt-1.5 mt-0.5">• อัตราค่าปรับศุลกากร: <strong class="text-amber-300 font-semibold" id="rptMultiple">4 เท่า</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total Section -->
+                    <div class="my-5 py-2 border-y border-slate-800">
+                        <div class="text-xs text-slate-400 mb-1.5">ยอดเงินที่ต้องชำระทั้งสิ้น (ประมาณการ)</div>
+                        <div class="text-3xl sm:text-4xl font-extrabold text-red-400 tracking-tight leading-none py-1" id="totalPay">
                             0 บาท
                         </div>
-                        <div class="text-xs text-slate-400 mt-1 flex items-center gap-1" id="confiscateNotice">
-                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400"></i>
-                            <span class="text-amber-300 font-medium">สินค้ารถ/ของกลางจะถูก "ริบเป็นของหลวง"</span>
+                        <div class="text-xs text-slate-400 mt-2.5 flex items-center gap-1.5 pt-1" id="confiscateNotice">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                            <span class="text-amber-300 font-medium leading-snug">สินค้ารถ/ของกลางจะถูก "ริบเป็นของหลวง"</span>
                         </div>
                     </div>
 
                     <!-- Detailed Breakdown -->
-                    <div class="space-y-3 border-t border-slate-800 pt-4 text-sm">
+                    <div class="space-y-2.5 text-sm pt-1">
+                        <div class="flex justify-between items-center text-slate-300 text-xs">
+                            <span>• ฐานภาษี VAT (CIF + อากร):</span>
+                            <span class="font-medium text-slate-200" id="vatBaseText">0 บาท</span>
+                        </div>
                         <div class="flex justify-between items-center text-slate-300">
                             <span>อากรขาเข้าปกติ</span>
                             <span class="font-medium text-white" id="importDutyText">0 บาท</span>
@@ -223,7 +240,7 @@
                             <span>ภาษีมูลค่าเพิ่ม (VAT 7%)</span>
                             <span class="font-medium text-white" id="vatText">0 บาท</span>
                         </div>
-                        <div class="flex justify-between items-center text-amber-300 border-t border-slate-800/60 pt-2">
+                        <div class="flex justify-between items-center text-amber-300 border-t border-slate-800/80 pt-2">
                             <span>ค่าปรับศุลกากร</span>
                             <span class="font-bold text-amber-400" id="customsFineText">0 บาท</span>
                         </div>
@@ -232,7 +249,7 @@
                             <span class="font-bold text-amber-400" id="vatFineText">0 บาท</span>
                         </div>
                         <!-- Split Surcharges for Transparency -->
-                        <div class="border-t border-slate-800/60 pt-2 space-y-1.5 text-xs text-slate-400">
+                        <div class="border-t border-slate-800/80 pt-2 space-y-1.5 text-xs text-slate-400">
                             <div class="flex justify-between items-center">
                                 <span>• เงินเพิ่มอากรศุลกากร (1%/เดือน)</span>
                                 <span class="text-slate-300" id="customsSurchargeText">0 บาท</span>
@@ -241,9 +258,9 @@
                                 <span>• เงินเพิ่ม VAT สรรพากร (1.5%/เดือน)</span>
                                 <span class="text-slate-300" id="vatSurchargeText">0 บาท</span>
                             </div>
-                            <div class="flex justify-between items-center font-medium text-slate-300 pt-1">
-                                <span>รวมเงินเพิ่มค้างชำระ</span>
-                                <span id="surchargeText">0 บาท</span>
+                            <div class="flex justify-between items-center font-medium text-slate-300 pt-1.5 border-t border-slate-800/60">
+                                <span>รวมเงินเพิ่มค้างชำระทั้งหมด</span>
+                                <span class="text-amber-300 font-semibold" id="surchargeText">0 บาท</span>
                             </div>
                         </div>
                     </div>
@@ -252,11 +269,11 @@
                     <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
                         <button onclick="copySummary()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                            คัดลอกสรุป
+                            คัดลอกรายงาน
                         </button>
                         <button onclick="downloadAsImage()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium py-2.5 px-3 rounded-lg flex items-center justify-center gap-1.5 transition shadow-sm">
                             <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                            บันทึกเป็นรูปภาพ
+                            บันทึกรายงานเป็นรูป
                         </button>
                     </div>
                 </div>
@@ -291,7 +308,17 @@
 
     <script>
         // Initialize Lucide Icons
-        lucide.createIcons();
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // Helper function for currency formatting
+        function formatCurrency(amount) {
+            return (amount || 0).toLocaleString('th-TH', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            }) + ' บาท';
+        }
 
         function setDuty(rate) {
             document.getElementById('dutyRate').value = rate;
@@ -357,6 +384,12 @@
             const caseBadge = document.getElementById('caseBadge');
             const confiscateNotice = document.getElementById('confiscateNotice');
 
+            // Update Report Info Box (Input Parameters Display)
+            document.getElementById('rptCif').innerText = cif.toLocaleString('th-TH') + ' บาท';
+            document.getElementById('rptDutyRate').innerText = dutyRate + '%';
+            document.getElementById('rptMonths').innerText = months + ' เดือน';
+            document.getElementById('rptMultiple').innerText = customsMultiple + ' เท่า';
+
             if (caseType === 'smuggle') {
                 // Smuggling (ม. 242): Fine = Multiple * (CIF + Import Duty)
                 const customsFineBase = cif + importDuty;
@@ -371,6 +404,7 @@
                 caseBadge.innerText = 'ลักลอบนำเข้า';
                 caseBadge.className = 'text-xs px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 font-medium border border-red-500/30';
                 confiscateNotice.style.display = 'flex';
+                document.getElementById('rptCaseType').innerText = 'ลักลอบนำเข้า (ม. 242)';
             } else {
                 // Under-declaration (ม. 243): Fine = Multiple * Duty Shortfall
                 customsFine = importDuty * customsMultiple;
@@ -384,11 +418,13 @@
                 caseBadge.innerText = 'สำแดงเท็จ';
                 caseBadge.className = 'text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 font-medium border border-amber-500/30';
                 confiscateNotice.style.display = 'none';
+                document.getElementById('rptCaseType').innerText = 'สำแดงเท็จ (ม. 243)';
             }
 
             const totalSurcharge = customsSurcharge + vatSurcharge;
 
             // Render Output
+            document.getElementById('vatBaseText').innerText = formatCurrency(vatBase);
             document.getElementById('importDutyText').innerText = formatCurrency(importDuty);
             document.getElementById('vatText').innerText = formatCurrency(vat);
             document.getElementById('customsFineText').innerText = formatCurrency(customsFine);
@@ -399,25 +435,33 @@
             document.getElementById('totalPay').innerText = formatCurrency(grandTotal);
         }
 
-        function formatCurrency(amount) {
-            return amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' บาท';
-        }
-
         function copySummary() {
             const cif = document.getElementById('cifPrice').value;
-            const caseType = document.querySelector('input[name="caseType"]:checked').value === 'smuggle' ? 'ลักลอบนำเข้า' : 'สำแดงเท็จ';
+            const dutyRate = document.getElementById('dutyRate').value;
+            const months = document.getElementById('monthsOverdue').value;
+            const customsMultiple = document.getElementById('customsMultiple').value;
+            const caseType = document.querySelector('input[name="caseType"]:checked').value === 'smuggle' ? 'ลักลอบนำเข้า (ม. 242)' : 'สำแดงเท็จ (ม. 243)';
             const total = document.getElementById('totalPay').innerText;
             
-            const summaryText = `[สรุปประเมินภาษีและค่าปรับศุลกากร]
-ประเภท: ${caseType}
-ราคาสินค้า (CIF): ${parseFloat(cif).toLocaleString()} บาท
-อากรขาเข้า: ${document.getElementById('importDutyText').innerText}
-ภาษี VAT (7%): ${document.getElementById('vatText').innerText}
-ค่าปรับศุลกากร: ${document.getElementById('customsFineText').innerText}
-เบี้ยปรับ VAT: ${document.getElementById('vatFineText').innerText}
-เงินเพิ่มอากร (1%/เดือน): ${document.getElementById('customsSurchargeText').innerText}
-เงินเพิ่ม VAT (1.5%/เดือน): ${document.getElementById('vatSurchargeText').innerText}
-ยอดชำระรวมทั้งสิ้น: ${total}`;
+            const summaryText = `========= รายงานประเมินภาษีและค่าปรับศุลกากร =========
+[1] ข้อมูลปัจจัยที่กรอก (Input Parameters)
+• มูลค่าสินค้า (CIF): ${parseFloat(cif).toLocaleString('th-TH')} บาท
+• อัตราอากรขาเข้าปกติ: ${dutyRate}%
+• ลักษณะความผิด: ${caseType}
+• ระยะเวลาค้างชำระ: ${months} เดือน
+• อัตราค่าปรับศุลกากรที่ใช้: ${customsMultiple} เท่า
+
+[2] รายละเอียดผลการประเมิน (Assessment Breakdown)
+• ฐานภาษี VAT (CIF + อากร): ${document.getElementById('vatBaseText').innerText}
+• อากรขาเข้าปกติ: ${document.getElementById('importDutyText').innerText}
+• ภาษีมูลค่าเพิ่ม (VAT 7%): ${document.getElementById('vatText').innerText}
+• ค่าปรับศุลกากร: ${document.getElementById('customsFineText').innerText}
+• เบี้ยปรับ VAT สรรพากร: ${document.getElementById('vatFineText').innerText}
+• เงินเพิ่มอากรศุลกากร (1%/เดือน): ${document.getElementById('customsSurchargeText').innerText}
+• เงินเพิ่ม VAT สรรพากร (1.5%/เดือน): ${document.getElementById('vatSurchargeText').innerText}
+---------------------------------------------------
+💰 ยอดเงินที่ต้องชำระรวมทั้งสิ้น: ${total}
+===================================================`;
 
             // Clipboard fallback for frame restrictions
             const textarea = document.createElement('textarea');
@@ -426,7 +470,7 @@
             textarea.select();
             try {
                 document.execCommand('copy');
-                showToast('คัดลอกสรุปรายการเรียบร้อยแล้ว');
+                showToast('คัดลอกรายงานสรุปทั้งหมดเรียบร้อยแล้ว');
             } catch (err) {
                 showToast('ไม่สามารถคัดลอกได้');
             }
@@ -475,9 +519,3 @@
     </script>
 </body>
 </html>
-```
-
-### รายละเอียดการอัปเดต:
-1. **เพิ่มไลบรารี `html2canvas`:** รองรับการเรนเดอร์การ์ดสรุปผลการคำนวณออกมาเป็นไฟล์ภาพ `.png`
-2. **ปรับเปลี่ยนปุ่ม Action:** เปลี่ยนจากปุ่มพิมพ์เป็นปุ่ม **"บันทึกเป็นรูปภาพ"** ที่พร้อมดาวน์โหลดลงคอมพิวเตอร์หรือโทรศัพท์มือถือทันที
-3. **ปรับความคมชัดภาพ:** กำหนด `scale: 2` เพื่อให้ภาพสรุปมีความคมชัดสูง อ่านง่ายแม้แชร์ลงไลน์หรือส่งอีเมลครับ
